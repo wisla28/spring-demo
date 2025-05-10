@@ -2,23 +2,28 @@ FROM openjdk:24-slim
 
 USER root
 
-# Install required tools
-RUN apt-get update && apt-get install -y \
+# Install required system tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
     wget \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Gradle version
+ENV GRADLE_VERSION=8.14
+ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
+ENV PATH="${GRADLE_HOME}/bin:${PATH}"
 
 # Install Gradle manually
-ENV GRADLE_VERSION=8.6
 RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
-    && unzip gradle-${GRADLE_VERSION}-bin.zip \
-    && mv gradle-${GRADLE_VERSION} /opt/gradle \
-    && ln -s /opt/gradle/bin/gradle /usr/bin/gradle \
+    && unzip gradle-${GRADLE_VERSION}-bin.zip -d /opt/gradle \
     && rm gradle-${GRADLE_VERSION}-bin.zip
 
-# Show versions
+# Verify installations
 RUN java -version && gradle -v
 
-# Default entrypoint
-ENTRYPOINT []
+# Set working directory
+WORKDIR /app
+
+# Default entrypoint (optional)
+ENTRYPOINT ["/bin/bash"]
