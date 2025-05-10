@@ -1,3 +1,5 @@
+// build.gradle
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.5'
@@ -24,5 +26,19 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
+    
+    // Pokazuj więcej informacji o testach
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+    
+    // Uruchamiaj testy równolegle (opcjonalne)
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    
+    // Zwiększ pamięć dla testów (jeśli potrzebne)
+    jvmArgs '-Xmx512m'
 }
