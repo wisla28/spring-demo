@@ -1,29 +1,30 @@
-FROM openjdk:24-slim
+FROM eclipse-temurin:21-jdk-alpine
 
-USER root
+ENV GRADLE_VERSION=8.14 \
+    GRADLE_HOME=/opt/gradle \
+    PATH=$PATH:/opt/gradle/bin
 
-# Install required system tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
+    bash \
     git \
     unzip \
     wget \
-    && rm -rf /var/lib/apt/lists/*
+    libstdc++
 
-# Set Gradle version
-ENV GRADLE_VERSION=8.14
-ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
-ENV PATH="${GRADLE_HOME}/bin:${PATH}"
 
-# Install Gradle manually
-RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
-    && unzip gradle-${GRADLE_VERSION}-bin.zip -d /opt/gradle \
-    && rm gradle-${GRADLE_VERSION}-bin.zip
+RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip && \
+    unzip -qd /opt /tmp/gradle.zip && \
+    ln -s /opt/gradle-${GRADLE_VERSION} ${GRADLE_HOME} && \
+    rm /tmp/gradle.zip
 
-# Verify installations
-RUN java -version && gradle -v
+RUN addgroup -S spring && \
+    adduser -S spring -G spring && \
+    mkdir -p /app && \
+    chown spring:spring /app
 
-# Set working directory
+USER spring:spring
 WORKDIR /app
 
-# Default entrypoint (optional)
-ENTRYPOINT ["/bin/bash"]
+RUN java -version && gradle -v
+
+ENTRYPOINT ["/bin/sh", "-c"]
